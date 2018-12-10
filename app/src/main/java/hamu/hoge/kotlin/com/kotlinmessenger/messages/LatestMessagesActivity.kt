@@ -3,26 +3,26 @@ package hamu.hoge.kotlin.com.kotlinmessenger.messages
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.widget.DividerItemDecoration
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.xwray.groupie.GroupAdapter
-import com.xwray.groupie.Item
 import com.xwray.groupie.ViewHolder
 import hamu.hoge.kotlin.com.kotlinmessenger.R
 import hamu.hoge.kotlin.com.kotlinmessenger.models.ChatMessage
 import hamu.hoge.kotlin.com.kotlinmessenger.models.User
 import hamu.hoge.kotlin.com.kotlinmessenger.registerlogin.RegisterActivity
+import hamu.hoge.kotlin.com.kotlinmessenger.views.LatestMessageRow
 import kotlinx.android.synthetic.main.activity_latest_messages.*
-import kotlinx.android.synthetic.main.latest_message_row.view.*
 
 class LatestMessagesActivity : AppCompatActivity() {
 
     companion object {
         var currentUser: User? = null
+        val TAG = "LatestMessages"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,8 +30,18 @@ class LatestMessagesActivity : AppCompatActivity() {
         setContentView(R.layout.activity_latest_messages)
 
         recycleview_latest_messages.adapter = adapter
+        recycleview_latest_messages.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
 
-//        setupDummyRows()
+        // set item click listener on your adapter
+        adapter.setOnItemClickListener { item, view ->
+            Log.d(TAG, "123")
+            val intent = Intent(this, ChatLogActivity::class.java)
+
+            // we are missing the chat partner user
+            val row = item as LatestMessageRow
+            intent.putExtra(NewMessageActivity.USER_KEY, row.chatPartnerUser)
+            startActivity(intent)
+        }
 
         listenForLatestMessages()
 
@@ -40,14 +50,6 @@ class LatestMessagesActivity : AppCompatActivity() {
         verifyUserIsLoggedIn()
     }
 
-    class LatestMessageRow(val chatMessage: ChatMessage): Item<ViewHolder>() {
-        override fun bind(viewHolder: ViewHolder, position: Int) {
-            viewHolder.itemView.message_textview_latest_message.text = chatMessage.text
-        }
-        override fun getLayout(): Int {
-            return R.layout.latest_message_row
-        }
-    }
 
     val latestMessagesMap = HashMap<String, ChatMessage>()
 
@@ -85,15 +87,6 @@ class LatestMessagesActivity : AppCompatActivity() {
     }
 
     val adapter = GroupAdapter<ViewHolder>()
-
-//    private  fun setupDummyRows() {
-//
-//
-//        adapter.add(LatestMessageRow())
-//        adapter.add(LatestMessageRow())
-//        adapter.add(LatestMessageRow())
-//
-//    }
 
 
     private fun fetchCurrentUser() {
